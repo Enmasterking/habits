@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Flow Tracker</title>
+  <style>
+    :root {
+      --bg: #090a0f;
+      --card: rgba(21, 23, 35, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text: #f0f3f9;
+      --text-dim: #7e8b9b;
+      --accent-cyan: #00f2fe;
+      --accent-purple: #7000ff;
+      --done-gradient: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+      --done-glow: rgba(0, 242, 254, 0.3);
+      --streak-glow: rgba(255, 126, 95, 0.25);
+      --radius: 16px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(112, 0, 255, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(0, 242, 254, 0.08) 0%, transparent 40%);
+      background-attachment: fixed;
+      color: var(--text);
+      padding: 28px 16px;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      padding: 22px;
+      border-radius: var(--radius);
+      margin-bottom: 18px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #f0f3f9, #7e8b9b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Counter Card */
+    .counter-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(135deg, rgba(112, 0, 255, 0.15) 0%, rgba(0, 242, 254, 0.05) 100%);
+      border: 1px solid rgba(112, 0, 255, 0.3);
+      box-shadow: 0 8px 24px rgba(112, 0, 255, 0.15);
+    }
+
+    .streak-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #b28aff;
+      font-weight: 700;
+    }
+
+    .streak-count {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #00f2fe, #b28aff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.4));
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
+
+    /* Habit List Styles */
+    .habit-row {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .habit-row:last-child {
+      border-bottom: none;
+    }
+
+    .habit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .habit-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .streak-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #ff7e5f;
+      background: rgba(255, 126, 95, 0.12);
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 126, 95, 0.25);
+      box-shadow: 0 0 8px var(--streak-glow);
+    }
+
+    .habit-inputs {
+      display: flex;
+      gap: 10px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      background: rgba(10, 12, 18, 0.6);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-dim);
+      border: 1px solid var(--card-border);
+      padding: 8px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+    }
+
+    .btn.completed {
+      background: var(--done-gradient);
+      color: #000;
+      border: none;
+      font-weight: 700;
+      box-shadow: 0 0 16px var(--done-glow);
+    }
+
+    /* Clickable History Grid Pill */
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .day-pill {
+      background: rgba(10, 12, 18, 0.5);
+      border: 1px solid var(--card-border);
+      padding: 12px 2px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .day-pill:hover {
+      border-color: rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateY(-2px);
+    }
+
+    .day-pill.selected {
+      border-color: #b28aff;
+      box-shadow: 0 0 10px rgba(178, 138, 255, 0.3);
+    }
+
+    .day-pill.all-done {
+      border-color: var(--accent-cyan);
+      color: #ffffff;
+      background: rgba(0, 242, 254, 0.12);
+      box-shadow: 0 0 12px rgba(0, 242, 254, 0.2);
+    }
+
+    .nav-btn {
+      font-size: 0.75rem;
+      padding: 5px 10px;
+      border-radius: 8px;
+    }
+
+    /* Modal Backdrop & Dialog */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(5, 6, 10, 0.85);
+      backdrop-filter: blur(8px);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .modal-content {
+      background: #11141d;
+      border: 1px solid var(--card-border);
+      padding: 24px;
+      border-radius: var(--radius);
+      width: 85%;
+      max-width: 360px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.8);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    
+    <!-- Clean Streak Counter -->
+    <div class="card counter-card">
+      <div>
+        <div class="streak-title">Clean Streak Counter</div>
+        <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 2px;">Consecutive Days</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="streak-count" id="cleanStreakDisplay">0</div>
+        <button class="icon-btn" onclick="resetCleanStreak()" title="Reset Counter" style="color: rgba(255,255,255,0.25);">↺</button>
+      </div>
+    </div>
+
+    <!-- Active Day Routine Section -->
+    <div class="card">
+      <div class="header-row">
+        <h2 id="currentDayTitle">Daily Routine</h2>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <button class="btn nav-btn" id="todayResetBtn" onclick="selectDate(getToday())" style="display: none;">Return to Today</button>
+          <button class="icon-btn" onclick="toggleSettingsModal(true)" title="Data Options">⚙️</button>
+        </div>
+      </div>
+      <div id="habitContainer"></div>
+    </div>
+
+    <!-- Weekly Progression View -->
+    <div class="card">
+      <div class="header-row">
+        <h2 id="weekViewTitle">Weekly Overview</h2>
+        <div style="display: flex; gap: 4px;">
+          <button class="btn nav-btn" onclick="shiftWeek(-1)">◀</button>
+          <button class="btn nav-btn" onclick="shiftWeek(0)">Today</button>
+          <button class="btn nav-btn" onclick="shiftWeek(1)">▶</button>
+        </div>
+      </div>
+      <div class="history-grid" id="historyGrid"></div>
+    </div>
+
+  </div>
+
+  <!-- Backup Controls Modal -->
+  <div class="modal" id="settingsModal">
+    <div class="modal-content">
+      <h2 style="margin-bottom: 8px;">Backup & Restore</h2>
+      <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 20px;">Export or restore your habit data.</p>
+      
+      <button class="btn" style="width: 100%; margin-bottom: 10px;" onclick="exportData()">Export Data File</button>
+      
+      <input type="file" id="importFile" onchange="importData(event)" style="display: none;">
+      <button class="btn" style="width: 100%; margin-bottom: 20px;" onclick="document.getElementById('importFile').click()">Import Data File</button>
+
+      <button class="btn" style="width: 100%; background: transparent; border: none; color: var(--text-dim);" onclick="toggleSettingsModal(false)">Close</button>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'daily_calm_flow_tracker';
+    const CORE_HABITS = [
+      { id: 'exer', name: 'Post-Work Workout', placeholder: 'Dumbbells / bodyweight sets' },
+      { id: 'meal', name: 'Prepared Meal', placeholder: 'Cooked after work' },
+      { id: 'lang', name: 'Focused Immersion (60m)', placeholder: 'Language study session' }
+    ];
+
+    let store = JSON.parse(localStorage.getItem(STORAGE_KEY)) || { logs: {}, cleanSince: new Date().toISOString() };
+    let weekOffset = 0;
+    let selectedDate = new Date().toISOString().split('T')[0];
+
+    const getToday = () => new Date().toISOString().split('T')[0];
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+      render();
+    }
+
+    function selectDate(dateStr) {
+      selectedDate = dateStr;
+      render();
+    }
+
+    function toggleHabit(habitId) {
+      if (!store.logs[selectedDate]) store.logs[selectedDate] = {};
+      if (!store.logs[selectedDate][habitId]) store.logs[selectedDate][habitId] = { done: false, note: '' };
+      
+      store.logs[selectedDate][habitId].done = !store.logs[selectedDate][habitId].done;
+      saveData();
+    }
+
+    function updateNote(habitId, text) {
+      if (!store.logs[selectedDate]) store.logs[selectedDate] = {};
+      if (!store.logs[selectedDate][habitId]) store.logs[selectedDate][habitId] = { done: false, note: '' };
+      
+      store.logs[selectedDate][habitId].note = text;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+    }
+
+    function resetCleanStreak() {
+      if (confirm("Reset clean streak counter to 0?")) {
+        store.cleanSince = new Date().toISOString();
+        saveData();
+      }
+    }
+
+    function getCleanStreakDays() {
+      const start = new Date(store.cleanSince);
+      const now = new Date();
+      const diffTime = Math.abs(now - start);
+      return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    }
+
+    function calculateStreak(habitId) {
+      let streak = 0;
+      let d = new Date();
+      while (true) {
+        const dateStr = d.toISOString().split('T')[0];
+        if (store.logs[dateStr] && store.logs[dateStr][habitId] && store.logs[dateStr][habitId].done) {
+          streak++;
+          d.setDate(d.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+      return streak;
+    }
+
+    function shiftWeek(offset) {
+      if (offset === 0) weekOffset = 0;
+      else weekOffset += offset;
+      render();
+    }
+
+    function toggleSettingsModal(show) {
+      document.getElementById('settingsModal').style.display = show ? 'flex' : 'none';
+    }
+
+    function render() {
+      const today = getToday();
+      const selectedData = store.logs[selectedDate] || {};
+
+      document.getElementById('cleanStreakDisplay').innerText = getCleanStreakDays();
+
+      // Set Title & Show/Hide Return to Today Button
+      const isToday = selectedDate === today;
+      document.getElementById('currentDayTitle').innerText = isToday ? "Daily Routine" : `Log: ${selectedDate}`;
+      document.getElementById('todayResetBtn').style.display = isToday ? "none" : "inline-block";
+
+      document.getElementById('habitContainer').innerHTML = CORE_HABITS.map(h => {
+        const entry = selectedData[h.id] || { done: false, note: '' };
+        const streak = calculateStreak(h.id);
+        return `
+          <div class="habit-row">
+            <div class="habit-header">
+              <span class="habit-title">${h.name}</span>
+              <span class="streak-badge">${streak}d streak</span>
+            </div>
+            <div class="habit-inputs">
+              <input type="text" 
+                     placeholder="${h.placeholder}" 
+                     value="${entry.note || ''}" 
+                     onchange="updateNote('${h.id}', this.value)" />
+              <button class="btn ${entry.done ? 'completed' : ''}" onclick="toggleHabit('${h.id}')">
+                ${entry.done ? '✓ Done' : 'Mark'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const historyEl = document.getElementById('historyGrid');
+      historyEl.innerHTML = '';
+      
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + (weekOffset * 7));
+
+      document.getElementById('weekViewTitle').innerText = weekOffset === 0 ? "Weekly Overview" : `Week (${weekOffset < 0 ? weekOffset + 'w' : '+' + weekOffset + 'w'})`;
+
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(targetDate);
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+        const dayLabel = d.toLocaleDateString('en-US', { weekday: 'short' });
+        const dayLogs = store.logs[dateStr] || {};
+        const count = CORE_HABITS.filter(h => dayLogs[h.id] && dayLogs[h.id].done).length;
+        const isSelected = dateStr === selectedDate;
+
+        historyEl.innerHTML += `
+          <div class="day-pill ${count === CORE_HABITS.length ? 'all-done' : ''} ${isSelected ? 'selected' : ''}" 
+               onclick="selectDate('${dateStr}')">
+            <div>${dayLabel}</div>
+            <div style="font-size:0.65rem; opacity: 0.5; margin-top:2px;">${d.getMonth()+1}/${d.getDate()}</div>
+            <strong style="font-size: 0.95rem; display: block; margin-top: 4px;">${count}/${CORE_HABITS.length}</strong>
+          </div>
+        `;
+      }
+    }
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(store, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `flow-routine-backup-${getToday()}.json`;
+      a.click();
+    }
+
+    function importData(e) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        store = JSON.parse(event.target.result);
+        saveData();
+        toggleSettingsModal(false);
+      };
+      reader.readAsText(e.target.files[0]);
+    }
+
+    render();
+  </script>
+</body>
+</html>
